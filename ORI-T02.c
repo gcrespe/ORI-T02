@@ -983,7 +983,12 @@ promovido_aux btree_divide(char *chave, int filho_direito, int rrn, btree *t) {
 }
 
 bool btree_search(char *result, bool exibir_caminho, char *chave, int rrn, btree *t) {
-    printf(ERRO_NAO_IMPLEMENTADO, "btree_search");
+    int i = 1;
+    btree_node no = btree_node_malloc(t);
+    
+    while(i < QTD_MAX_CHAVES_PIX && strcmp(chave,))
+
+
 }
 
 bool btree_print_in_order(char *chave_inicio, char *chave_fim, bool (*exibir)(char *chave), int rrn, btree *t) {
