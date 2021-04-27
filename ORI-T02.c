@@ -662,17 +662,45 @@ void criar_clientes_idx() {
 
 /* Cria o índice primário transacoes_idx */
 void criar_transacoes_idx() {
-    printf(ERRO_NAO_IMPLEMENTADO, "criar_transacoes_idx");
+    char transacoes_str[TAM_CHAVE_TRANSACOES_IDX + 1];
+    for (unsigned i = 0; i < qtd_registros_transacoes; ++i) {
+        Transacao t = recuperar_registro_transacao(i);
+
+        sprintf(transacoes_str, "%s%s%04d", t.cpf_origem, t.timestamp, i);
+        btree_insert(transacoes_str, &transacoes_idx);
+    }
 }
 
 /* Cria o índice secundário chaves_pix_idx */
 void criar_chaves_pix_idx() {
-    printf(ERRO_NAO_IMPLEMENTADO, "criar_chaves_pix_idx");
+    char chaves_pix_str[TAM_CHAVE_CHAVES_PIX_IDX + 1];
+    for (unsigned i = 0; i < qtd_registros_clientes; ++i) {
+        Cliente c = recuperar_registro_cliente(i);
+
+        for(int j = 0; i < QTD_MAX_CHAVES_PIX; j++){
+
+            sprintf(chaves_pix_str, "%s%s%04d", c.cpf, c.chaves_pix[i], i);
+
+        }
+        
+        btree_insert(chaves_pix_str, &chaves_pix_idx);
+    }
 }
 
 /* Cria o índice secundário timestamp_cpf_origem_idx */
 void criar_timestamp_cpf_origem_idx() {
-    printf(ERRO_NAO_IMPLEMENTADO, "criar_timestamp_cpf_origem_idx");
+    char timestamp_cpf_origem_str[TAM_CHAVE_TIMESTAMP_CPF_ORIGEM_IDX + 1];
+    for (unsigned i = 0; i < qtd_registros_transacoes; ++i) {
+        Transacao t = recuperar_registro_transacao(i);
+
+        for(int j = 0; i < QTD_MAX_CHAVES_PIX; j++){
+
+            sprintf(timestamp_cpf_origem_str, "%s%s%04d", t.cpf_origem, t.timestamp, i);
+
+        }
+        
+        btree_insert(timestamp_cpf_origem_str, &timestamp_cpf_origem_idx);
+    }
 }
 
 /* Exibe um cliente dado seu RRN */
@@ -761,19 +789,73 @@ Cliente recuperar_registro_cliente(int rrn) {
 /* Recupera do arquivo de transações o registro com o RRN
  * informado e retorna os dados na struct Transacao */
 Transacao recuperar_registro_transacao(int rrn) {
-    printf(ERRO_NAO_IMPLEMENTADO, "recuperar_registro_transacao");
+    Transacao t;
+    char temp[TAM_REGISTRO_TRANSACAO + 1], valor[TAM_SALDO];
+    strncpy(temp, ARQUIVO_TRANSACOES + (rrn * TAM_REGISTRO_TRANSACAO), TAM_REGISTRO_TRANSACAO);
+    temp[TAM_REGISTRO_TRANSACAO] = '\0';
+
+    //atribui o endereco no arquivo a p, da mesma forma de recuperar cliente
+    //percorre a string pelo strncpy, ja que todos os campos tem tam fixo
+
+    strncpy(t.cpf_origem, temp, 11);
+    t.cpf_origem[11] = '\0';
+    strncpy(t.cpf_destino, temp + 11, 11);
+    t.cpf_destino[11] = '\0';
+    strncpy(valor, temp + 22, 13);
+    valor[TAM_SALDO-1] = '\0';
+    t.valor = atof(valor);
+    strncpy(t.timestamp, temp + 35, 14);
+    t.timestamp[14] = '\0';
+
+    return t;
 }
 
 /* Escreve no arquivo de clientes na posição informada (RRN)
  * os dados na struct Cliente */
 void escrever_registro_cliente(Cliente c, int rrn) {
-    printf(ERRO_NAO_IMPLEMENTADO, "escrever_registro_cliente");
+
+    char *p = ARQUIVO_CLIENTES + rrn*TAM_REGISTRO_CLIENTE;
+    char *registro[TAM_REGISTRO_CLIENTE+1];
+
+    sprintf(&registro, "%s;%s;%s;%s;%s;%013.2lf;", c.cpf, c.nome, c.nascimento, c.email, c.celular, c.saldo);
+
+    //usando a mesma metodologia do exibir_cliente
+    //mas para escrever em uma string
+    int escreveu = 0;
+    for (int i = 0; i < 4; ++i) {
+        if (c.chaves_pix[i][0] != '\0') {
+            if (escreveu)
+                strcat(&registro, "&");
+            strcat(&registro, c.chaves_pix[i]);
+            escreveu = 1;
+        }
+    }
+
+    strcat(&registro, ";");
+
+    while(strlen(registro) < 256){
+        strcat(registro, "#");
+    }
+
+    strncpy(p, registro, 256);
+    
 }
 
 /* Escreve no arquivo de transações na posição informada (RRN)
  * os dados na struct Transacao */
 void escrever_registro_transacao(Transacao t, int rrn) {
-    printf(ERRO_NAO_IMPLEMENTADO, "escrever_registro_transacao");
+        //escreve no arquivo de transacoes da mesma forma que no de clientes
+    //mas com as especificidades de uma transacao
+
+    char *p = ARQUIVO_TRANSACOES + rrn*TAM_REGISTRO_TRANSACAO;
+
+    char *registro[TAM_REGISTRO_TRANSACAO+1];
+
+    sprintf(registro, "%s%s%013.2lf%s", t.cpf_origem, t.cpf_destino, t.timestamp, t.valor);
+
+    strncpy(p, registro, TAM_REGISTRO_TRANSACAO);
+    
+    ARQUIVO_TRANSACOES[TAM_ARQUIVO_TRANSACAO] = '\0';
 }
 
 /* Funções principais */
