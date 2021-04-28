@@ -983,11 +983,38 @@ promovido_aux btree_divide(char *chave, int filho_direito, int rrn, btree *t) {
 }
 
 bool btree_search(char *result, bool exibir_caminho, char *chave, int rrn, btree *t) {
-    int i = 1;
-    btree_node no = btree_node_malloc(t);
-    
-    while(i < QTD_MAX_CHAVES_PIX && strcmp(chave,))
 
+    int i = 1, igual = 0, posicaoNoArquivo = -1;
+
+    char temp[(btree_order-1)*15+(btree_order*3)+4];
+    
+    char chaveComparada[t->tam_chave], rrnChave[2], folha;
+    
+    strncpy(temp, t->arquivo + (t->rrn_raiz * (btree_order-1)*15+(btree_order*3)+4), ((btree_order-1)*15+(btree_order*3)+4)));
+    temp[t->tam_chave] = '\0';
+    
+    while(i < btree_order-1 && strncmp(chaveComparada, chave, t->tam_chave-3) <= 0){
+
+        strncpy(rrnChave, t, 3);
+
+        posicaoNoArquivo += 3;
+
+        strncpy(chave, t + posicaoNoArquivo, t->tam_chave);
+
+        posicaoNoArquivo += t->tam_chave;
+
+        strncpy(folha, t + posicaoNoArquivo, 1);
+
+    }
+
+    if(i <= btree_order-1 && strncmp(chaveComparada, chave, t->tam_chave-3) == 0){
+        sprintf(result, "%s", chave);
+        return true;
+
+    }
+
+    if(strcmp(folha, "T") == 0 ) return false;
+        else return btree_search(result, true, chave, rrn, t);
 
 }
 
@@ -1000,7 +1027,15 @@ btree_node btree_read(int rrn, btree *t) {
 }
 
 void btree_write(btree_node no, btree *t) {
-    printf(ERRO_NAO_IMPLEMENTADO, "btree_write");
+    char *p = t->arquivo + t->rrn_raiz*t->tam_chave;
+
+    char *registro[TAM_REGISTRO_TRANSACAO+1];
+
+    sprintf(registro, "%s%s%013.2lf%s", t.cpf_origem, t.cpf_destino, t.timestamp, t.valor);
+
+    strncpy(p, registro, TAM_REGISTRO_TRANSACAO);
+    
+    ARQUIVO_TRANSACOES[TAM_ARQUIVO_TRANSACAO] = '\0';
 }
 
 btree_node btree_node_malloc(btree *t) {
