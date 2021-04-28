@@ -986,7 +986,7 @@ bool btree_search(char *result, bool exibir_caminho, char *chave, int rrn, btree
 
     int i = 1, igual = 0, posicaoNoArquivo = -1;
 
-    char temp[(btree_order-1)*15+(btree_order*3)+4];
+    char temp[(btree_order-1)*t->tam_chave+(btree_order*3)+4+1];
     
     char chaveComparada[t->tam_chave], rrnChave[2], folha;
     
@@ -1027,15 +1027,16 @@ btree_node btree_read(int rrn, btree *t) {
 }
 
 void btree_write(btree_node no, btree *t) {
-    char *p = t->arquivo + t->rrn_raiz*t->tam_chave;
 
-    char *registro[TAM_REGISTRO_TRANSACAO+1];
+    char *p = t->arquivo + t->qtd_nos*t->tam_chave;
 
-    sprintf(registro, "%s%s%013.2lf%s", t.cpf_origem, t.cpf_destino, t.timestamp, t.valor);
+    char *registro[(btree_order-1)*t->tam_chave+(btree_order*3)+4+1];
 
-    strncpy(p, registro, TAM_REGISTRO_TRANSACAO);
+    sprintf(registro, "%.3lf%s%c%s", no.this_rrn, no.chaves, no.folha, no.filhos);
+
+    strcpy(p, registro);
     
-    ARQUIVO_TRANSACOES[TAM_ARQUIVO_TRANSACAO] = '\0';
+    t->arquivo[strlen(p) + strlen(registro)] = '\0';
 }
 
 btree_node btree_node_malloc(btree *t) {
