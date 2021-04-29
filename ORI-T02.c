@@ -980,7 +980,7 @@ void btree_insert(char *chave, btree *t) {
         btree_node x = btree_node_malloc(t);
 
         x.folha = true;
-        x.this_rrn = ;
+        x.this_rrn = 1;
         sprintf(x.chaves[0], "%s", chave);
 
         t->rrn_raiz = x.this_rrn;
@@ -998,7 +998,7 @@ void btree_insert(char *chave, btree *t) {
 
             x.folha = false;
 
-            x.qtd_chaves = 1;
+            x.qtd_chaves = 1; //de onde sai o rrn desse nó?
 
             sprintf(x.chaves[0], "%s", chaveFilho->chave_promovida);
 
@@ -1013,7 +1013,7 @@ void btree_insert(char *chave, btree *t) {
 }
 
 promovido_aux btree_insert_aux(char *chave, int rrn, btree *t) {
-    printf(ERRO_NAO_IMPLEMENTADO, "btree_insert_aux");
+    
 }
 
 promovido_aux btree_divide(char *chave, int filho_direito, int rrn, btree *t) {
@@ -1027,8 +1027,8 @@ bool btree_search(char *result, bool exibir_caminho, char *chave, int rrn, btree
     char temp[(btree_order-1)*t->tam_chave+(btree_order*3)+4+1];
     
     char chaveComparada[t->tam_chave], rrnChave[2], folha;
-    
-    strncpy(temp, t->arquivo + (t->rrn_raiz * (btree_order-1)*15+(btree_order*3)+4), ((btree_order-1)*15+(btree_order*3)+4)));
+                                                            //talvez mudar esse -1, pq o tamanho nao pode estar atrelado a nenhuma arvore especifica
+    strncpy(temp, t->arquivo + (t->rrn_raiz * (btree_order-1)*15+(btree_order*3)+4), ((btree_order-1)*15+(btree_order*3)+4));
     temp[t->tam_chave] = '\0';
     
     while(i < btree_order-1 && strncmp(chaveComparada, chave, t->tam_chave-3) <= 0){
@@ -1063,7 +1063,14 @@ bool btree_print_in_order(char *chave_inicio, char *chave_fim, bool (*exibir)(ch
 }
 
 btree_node btree_read(int rrn, btree *t) {
-    printf(ERRO_NAO_IMPLEMENTADO, "btree_read");
+
+    btree_node *no = malloc(sizeof(no));
+    int i = t->
+
+    char temp[t->tam_chave], *p;
+    strncpy(temp, t->arquivo + t->tam_chave*rrn, t->tam_chave);
+
+    no->
 }
 
 void btree_write(btree_node no, btree *t) {
