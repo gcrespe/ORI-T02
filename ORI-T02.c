@@ -957,21 +957,59 @@ int order_clientes_idx(const void *key, const void *elem) {
 
 /* Função de comparação entre chaves do índice transacoes_idx */
 int order_transacoes_idx(const void *key, const void *elem) {
-    printf(ERRO_NAO_IMPLEMENTADO, "order_transacoes_idx");
+    return strncmp(key, elem, TAM_TIMESTAMP - 1);
 }
 
 /* Função de comparação entre chaves do índice chaves_pix_idx */
 int order_chaves_pix_idx(const void *key, const void *elem) {
-    printf(ERRO_NAO_IMPLEMENTADO, "order_chaves_pix_idx");
+    int compare = strncmp(key, elem, TAM_MAX_CHAVE_PIX - 1);
+    if (compare == 0) return compare;
+    else return strncmp(key, elem, TAM_CPF - 1);
 }
 
 /* Função de comparação entre chaves do índice timestamp_cpf_origem_idx */
 int order_timestamp_cpf_origem_idx(const void *key, const void *elem) {
-    printf(ERRO_NAO_IMPLEMENTADO, "order_timestamp_cpf_origem_idx");
+    int compare = strncmp(key, elem, TAM_TIMESTAMP - 1);
+    if (compare == 0) return compare;
+    else return strncmp(key, elem, TAM_CPF - 1);
 }
 
 void btree_insert(char *chave, btree *t) {
-    printf(ERRO_NAO_IMPLEMENTADO, "btree_insert");
+    if(t->rrn_raiz == -1){
+
+        btree_node x = btree_node_malloc(t);
+
+        x.folha = true;
+        x.this_rrn = ;
+        sprintf(x.chaves[0], "%s", chave);
+
+        t->rrn_raiz = x.this_rrn;
+        t->qtd_nos++;
+
+    }
+    else{
+        promovido_aux *chaveFilho = malloc(sizeof(promovido_aux));
+
+        *chaveFilho = btree_insert_aux(chave, t->rrn_raiz, t);
+
+        if(chaveFilho != NULL){
+
+            btree_node x = btree_node_malloc(t);
+
+            x.folha = false;
+
+            x.qtd_chaves = 1;
+
+            sprintf(x.chaves[0], "%s", chaveFilho->chave_promovida);
+
+            x.filhos[0] = t->rrn_raiz;
+
+            x.filhos[1] = chaveFilho->filho_direito;
+
+            t->rrn_raiz = x.this_rrn;  
+        } 
+
+    }
 }
 
 promovido_aux btree_insert_aux(char *chave, int rrn, btree *t) {
@@ -1012,6 +1050,8 @@ bool btree_search(char *result, bool exibir_caminho, char *chave, int rrn, btree
         return true;
 
     }
+
+    t += posicaoNoArquivo;
 
     if(strcmp(folha, "T") == 0 ) return false;
         else return btree_search(result, true, chave, rrn, t);
