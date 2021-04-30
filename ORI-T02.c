@@ -1020,7 +1020,79 @@ promovido_aux btree_insert_aux(char *chave, int rrn, btree *t) {
     char *registro[t->tam_chave];
     bool search = btree_search(registro, false, chave, rrn, t);
     
-    promovido_aux *noPromovido;
+    promovido_aux noPromovido;
+    sprintf(noPromovido.chave_promovida, NULL);
+    noPromovido.filho_direito = NULL;
+    
+    if (!search){
+        
+        return noPromovido;
+    }
+    else{
+
+        if(x.folha){
+            if(x.qtd_chaves < btree_order -1){
+                int i = x.qtd_chaves;
+                while(i >= 1 && strcmp(chave, x.chaves[i]) > 0){
+                    x.chaves[i+1] = x.chaves[i];
+                    i -= 1;
+                }
+
+                sprintf(x.chaves[i+1], "%s", chave);
+                x.qtd_chaves += 1; 
+
+                sprintf(noPromovido.chave_promovida, "", NULL);
+                noPromovido.filho_direito = NULL;
+                return noPromovido;
+            
+            }else{
+
+                return btree_divide(chave, NULL, x.this_rrn, t);
+
+            }
+        
+        }else {
+
+            int i = x.qtd_chaves;
+            while(i >= 1 && strcmp(chave, x.chaves[i]) > 0){
+                x.chaves[i+1] = x.chaves[i];
+                i -= 1;
+            }
+            i += 1;
+
+            noPromovido = btree_insert_aux(chave, x.this_rrn, t);
+
+            if(noPromovido.chave_promovida != NULL){
+
+                sprintf(chave, "%s", noPromovido.chave_promovida);
+                
+                if(x.qtd_chaves < btree_order -1){
+                int i = x.qtd_chaves;
+                while(i >= 1 && strcmp(chave, x.chaves[i]) < 0){
+                    x.chaves[i+1] = x.chaves[i];
+                    x.filhos[i+2] = x.filhos[i+1];
+                    i -= 1;
+                }
+
+                sprintf(x.chaves[i+1], "%s", chave);
+                x.filhos[i+2] = noPromovido.filho_direito;
+
+                x.qtd_chaves += 1; 
+
+                promovido_aux noPromovido2;
+                sprintf(noPromovido2.chave_promovida, NULL);
+                noPromovido2.filho_direito = NULL;
+                return noPromovido;
+            }
+            else return btree_divide(chave, NULL, x.this_rrn, t);
+
+        }
+        
+        else return noPeomovido;
+
+    }
+        
+
 
 }
 
