@@ -975,6 +975,7 @@ int order_timestamp_cpf_origem_idx(const void *key, const void *elem) {
 }
 
 void btree_insert(char *chave, btree *t) {
+
     if(t->rrn_raiz == -1){
 
         btree_node x = btree_node_malloc(t);
@@ -1010,14 +1011,65 @@ void btree_insert(char *chave, btree *t) {
         } 
 
     }
+
 }
 
 promovido_aux btree_insert_aux(char *chave, int rrn, btree *t) {
+
+    btree_node x = btree_node_malloc(t);
+    char *registro[t->tam_chave];
+    bool search = btree_search(registro, false, chave, rrn, t);
     
+    promovido_aux *noPromovido;
+
 }
 
 promovido_aux btree_divide(char *chave, int filho_direito, int rrn, btree *t) {
-    printf(ERRO_NAO_IMPLEMENTADO, "btree_divide");
+
+    int i = t->qtd_nos;
+    char *result[t->tam_chave];
+    bool chaveAlocada = false;
+
+    btree_node *noRRN = malloc(sizeof(noRRN));
+    
+    noRRN = btree_search(result, false, chave, rrn, t);
+
+    btree_node *no = malloc(sizeof(no));
+    
+    no->folha = noRRN->folha;
+    no->qtd_chaves = (btree_order-1)/2;
+
+    for(int j = no->qtd_chaves; j > 1; j--){
+        if(!chaveAlocada && strcmp(chave, no->chaves[i]) > 0){
+            no->chaves[j] = chave;
+            no->filhos[j+1] = filho_direito;
+            chaveAlocada = true;
+        }
+        else    
+            no->chaves[j] = noRRN->chaves[j];
+            no->filhos[j+1] = noRRN->filhos[i+1];
+            i -= 1;
+    }
+
+    if(!chaveAlocada){
+        while(i >= 0 && strcmp(chave, noRRN->chaves[i] < 0)){
+            noRRN->chaves[i+1] = noRRN->chaves[i];
+            noRRN->filhos[i+2] = noRRN->filhos[i+1];
+            i -= 1;
+        }
+        noRRN->chaves[i+1] = chave;
+        noRRN->chaves[i+2] = filho_direito;
+    }
+
+    promovido_aux noPromovido;
+
+    sprintf(noPromovido.chave_promovida, "%s", noRRN->chaves[btree_order/2 + 1]);
+    noPromovido.filho_direito = noRRN->filhos[btree_order/2 + 1];
+    
+    noRRN->qtd_chaves = btree_order/2;
+
+    return noPromovido;
+
 }
 
 bool btree_search(char *result, bool exibir_caminho, char *chave, int rrn, btree *t) {
@@ -1065,7 +1117,6 @@ bool btree_print_in_order(char *chave_inicio, char *chave_fim, bool (*exibir)(ch
 btree_node btree_read(int rrn, btree *t) {
 
     btree_node *no = malloc(sizeof(no));
-    int i = t->
 
     char temp[t->tam_chave], *p;
     strncpy(temp, t->arquivo + t->tam_chave*rrn, t->tam_chave);
