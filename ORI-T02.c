@@ -695,7 +695,7 @@ void criar_timestamp_cpf_origem_idx() {
 
         for(int j = 0; i < QTD_MAX_CHAVES_PIX; j++){
 
-            sprintf(timestamp_cpf_origem_str, "%s%s%04d", t.cpf_origem, t.timestamp, i);
+            sprintf(timestamp_cpf_origem_str, "%s%s%c", t.cpf_origem, t.timestamp, i);
 
         }
         
@@ -860,13 +860,58 @@ void escrever_registro_transacao(Transacao t, int rrn) {
 
 /* Funções principais */
 void cadastrar_cliente_menu(char *cpf, char *nome, char *nascimento, char *email, char *celular) {
-    printf(ERRO_NAO_IMPLEMENTADO, "cadastrar_cliente_menu");
+
+    char cliente[TAM_REGISTRO_CLIENTE], chaveCliente[TAM_CHAVE_CLIENTES_IDX];
+    int rrn;
+
+    //procura a pk do cliente no indice, se existir eh repetido
+    bool found = btree_search(NULL, false, chaveCliente, clientes_idx.rrn_raiz, &clientes_idx);
+
+    if(found) { printf(ERRO_CHAVE_PIX_DUPLICADA, cpf); return; }
+    //monta a string que vai ser escrita
+
+    sprintf(rrn, "%d", chaveCliente + 2);
+
+    sprintf(chaveCliente, "00%d%s", rrn, cpf);
+
+    btree_insert(chaveCliente, &clientes_idx);
+
+    Cliente c;
+
+    sprintf(c.cpf, "%s", cpf);
+    sprintf(c.nome, "%s", nome);
+    sprintf(c.nascimento, "%s", nascimento);
+    sprintf(c.email, "%s", email);
+    sprintf(c.celular, "%s", celular);
+
+    qtd_registros_clientes++;
+    escrever_registro_cliente(c, qtd_registros_clientes);
+
+    printf(SUCESSO);
+
 }
 
 void alterar_saldo_menu(char *cpf, double valor) {
-    printf(ERRO_NAO_IMPLEMENTADO, "alterar_saldo_menu");
-}
+    
+    Cliente c;
 
+    char *chaveCliente[TAM_CHAVE_CLIENTES_IDX];
+
+    int rrn;
+
+    bool found = btree_search(chaveCliente, false, chaveCliente, clientes_idx.rrn_raiz, &clientes_idx);
+
+    if(!found) { printf(ERRO_REGISTRO_NAO_ENCONTRADO); return; }
+
+    sprintf(rrn, "%d", chaveCliente + 2);
+
+    c = recuperar_registro_cliente(rrn);
+
+    c.saldo += valor;
+
+    escrever_registro_cliente(c, rrn);
+    
+}
 void cadastrar_chave_pix_menu(char *cpf, char tipo) {
     printf(ERRO_NAO_IMPLEMENTADO, "cadastrar_chave_pix_menu");
 }
@@ -877,15 +922,57 @@ void transferir_menu(char *chave_pix_origem, char *chave_pix_destino, double val
 
 /* Busca */
 void buscar_cliente_cpf_menu(char *cpf) {
-    printf(ERRO_NAO_IMPLEMENTADO, "buscar_cliente_cpf_menu");
+
+    char chaveCliente[TAM_CHAVE_CLIENTES_IDX];
+
+    bool found = bsearch(cpf, false, chaveCliente, clientes_idx.rrn_raiz, &clientes_idx);   
+
+    if(found){
+
+        int rrn;
+        rrn = atoi(chaveCliente + 2);
+
+        exibir_cliente(rrn);
+
+    }else printf(ERRO_REGISTRO_NAO_ENCONTRADO);
+
 }
 
 void buscar_cliente_chave_pix_menu(char *chave_pix) {
-    printf(ERRO_NAO_IMPLEMENTADO, "buscar_cliente_chave_pix_menu");
+
+    char chavePix[TAM_MAX_CHAVE_PIX];
+
+    bool found = bsearch(chave_pix, false, chavePix, chaves_pix_idx.rrn_raiz, &chaves_pix_idx);   
+
+    if(found){
+
+        int rrn;
+        rrn = atoi(chavePix + 2);
+
+        exibir_cliente(rrn);
+
+    }else printf(ERRO_REGISTRO_NAO_ENCONTRADO);
+
 }
 
+//provavelmente errado
 void buscar_transacao_cpf_origem_timestamp_menu(char *cpf, char *timestamp) {
-    printf(ERRO_NAO_IMPLEMENTADO, "buscar_transacao_cpf_origem_timestamp_menu");
+
+    char chaveTransacao[TAM_CHAVE_TIMESTAMP_CPF_ORIGEM_IDX];
+
+    sprintf(chaveTransacao, "%s%s", cpf, timestamp);
+
+    bool found = bsearch(chaveTransacao, false, chaveTransacao, timestamp_cpf_origem_idx.rrn_raiz, &timestamp_cpf_origem_idx);   
+
+    if(found){
+
+        int rrn;
+        rrn = atoi(chaveTransacao + 2);
+
+        exibir_transacao(rrn);
+
+    }else printf(ERRO_REGISTRO_NAO_ENCONTRADO);
+
 }
 
 /* Listagem */
@@ -1021,8 +1108,8 @@ promovido_aux btree_insert_aux(char *chave, int rrn, btree *t) {
     bool search = btree_search(registro, false, chave, rrn, t);
     
     promovido_aux noPromovido;
-    sprintf(noPromovido.chave_promovida, NULL);
-    noPromovido.filho_direito = NULL;
+    sprintf(noPromovido.chave_promovida, "");
+    noPromovido.filho_direito = "";
     
     if (!search){
         
@@ -1080,19 +1167,18 @@ promovido_aux btree_insert_aux(char *chave, int rrn, btree *t) {
                 x.qtd_chaves += 1; 
 
                 promovido_aux noPromovido2;
-                sprintf(noPromovido2.chave_promovida, NULL);
-                noPromovido2.filho_direito = NULL;
+                sprintf(noPromovido2.chave_promovida, "");
+                noPromovido2.filho_direito = "";
                 return noPromovido;
             }
             else return btree_divide(chave, NULL, x.this_rrn, t);
 
+            }
+        
+            else return noPromovido;
+
         }
-        
-        else return noPeomovido;
-
     }
-        
-
 
 }
 
@@ -1104,7 +1190,7 @@ promovido_aux btree_divide(char *chave, int filho_direito, int rrn, btree *t) {
 
     btree_node *noRRN = malloc(sizeof(noRRN));
     
-    noRRN = btree_search(result, false, chave, rrn, t);
+    btree_search(result, false, chave, rrn, t);
 
     btree_node *no = malloc(sizeof(no));
     
@@ -1124,7 +1210,7 @@ promovido_aux btree_divide(char *chave, int filho_direito, int rrn, btree *t) {
     }
 
     if(!chaveAlocada){
-        while(i >= 0 && strcmp(chave, noRRN->chaves[i] < 0)){
+        while(i >= 0 && strcmp(chave, noRRN->chaves[i]) < 0){
             noRRN->chaves[i+1] = noRRN->chaves[i];
             noRRN->filhos[i+2] = noRRN->filhos[i+1];
             i -= 1;
@@ -1150,23 +1236,24 @@ bool btree_search(char *result, bool exibir_caminho, char *chave, int rrn, btree
 
     char temp[(btree_order-1)*t->tam_chave+(btree_order*3)+4+1];
     
-    char chaveComparada[t->tam_chave], rrnChave[2], folha;
+    char chaveComparada[t->tam_chave], rrnChave[2], folha[1];
                                                             //talvez mudar esse -1, pq o tamanho nao pode estar atrelado a nenhuma arvore especifica
     strncpy(temp, t->arquivo + (t->rrn_raiz * (btree_order-1)*15+(btree_order*3)+4), ((btree_order-1)*15+(btree_order*3)+4));
     temp[t->tam_chave] = '\0';
     
     while(i < btree_order-1 && strncmp(chaveComparada, chave, t->tam_chave-3) <= 0){
 
-        strncpy(rrnChave, t, 3);
+        strncpy(rrnChave, temp, 3);
 
         posicaoNoArquivo += 3;
 
-        strncpy(chave, t + posicaoNoArquivo, t->tam_chave);
+        strncpy(chave, temp + posicaoNoArquivo, t->tam_chave);
 
         posicaoNoArquivo += t->tam_chave;
 
-        strncpy(folha, t + posicaoNoArquivo, 1);
+        strncpy(folha, temp + posicaoNoArquivo, 1);
 
+        posicaoNoArquivo += 1;
     }
 
     if(i <= btree_order-1 && strncmp(chaveComparada, chave, t->tam_chave-3) == 0){
@@ -1177,7 +1264,7 @@ bool btree_search(char *result, bool exibir_caminho, char *chave, int rrn, btree
 
     t += posicaoNoArquivo;
 
-    if(strcmp(folha, "T") == 0 ) return false;
+    if(folha == "T") return false;
         else return btree_search(result, true, chave, rrn, t);
 
 }
@@ -1193,7 +1280,6 @@ btree_node btree_read(int rrn, btree *t) {
     char temp[t->tam_chave], *p;
     strncpy(temp, t->arquivo + t->tam_chave*rrn, t->tam_chave);
 
-    no->
 }
 
 void btree_write(btree_node no, btree *t) {
@@ -1202,14 +1288,15 @@ void btree_write(btree_node no, btree *t) {
 
     char *registro[(btree_order-1)*t->tam_chave+(btree_order*3)+4+1];
 
-    sprintf(registro, "%.3lf%s%c%s", no.this_rrn, no.chaves, no.folha, no.filhos);
+    sprintf(registro, "%.3lf%s%c%d", no.this_rrn, no.chaves, no.folha, no.filhos);
 
-    strcpy(p, registro);
+    sprintf(p, "%s" , *registro);
     
-    t->arquivo[strlen(p) + strlen(registro)] = '\0';
+    t->arquivo[strlen(p) + strlen(*registro)] = '\0';
 }
 
 btree_node btree_node_malloc(btree *t) {
+
     btree_node no;
 
     no.chaves = malloc((btree_order-1) * sizeof(char*));
@@ -1223,6 +1310,7 @@ btree_node btree_node_malloc(btree *t) {
         no.filhos[i] = -1;
 
     return no;
+    
 }
 
 void btree_node_free(btree_node no) {
