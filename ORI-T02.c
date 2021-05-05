@@ -913,7 +913,67 @@ void alterar_saldo_menu(char *cpf, double valor) {
     
 }
 void cadastrar_chave_pix_menu(char *cpf, char tipo) {
-    printf(ERRO_NAO_IMPLEMENTADO, "cadastrar_chave_pix_menu");
+    
+    int rrn = -1, i;
+    Cliente c;
+    char chaveStruct[TAM_MAX_CHAVE_PIX], cliente[TAM_REGISTRO_CLIENTE], *p, *tipo; 
+    p = cliente + 14;
+
+    bool found = btree_search(cliente, false, cpf, clientes_idx.rrn_raiz, &clientes_idx);
+
+    if(!found){
+
+    }
+
+    rrn = atoi(p);
+
+    c = recuperar_registro_cliente(rrn);
+
+    for (i = 0; i < 4; ++i) {
+        if (c.chaves_pix[i][0] == '\0') {
+            break;
+        }
+        if(c.chaves_pix[i][0] == tipo || i == 3){
+            printf(ERRO_CHAVE_PIX_DUPLICADA, tipo); 
+            return;
+        }
+    }  
+
+    char chaveBuffer[TAM_MAX_CHAVE_PIX];
+    chaveBuffer[TAM_MAX_CHAVE_PIX] = '\0';
+
+    if(tipo == 78){
+        sprintf(chaveStruct, "%s", c.celular);
+        tipo = "N";
+    }
+    else if(tipo == 65){
+        new_uuid(chaveBuffer);
+        sprintf(chaveStruct, "%s", chaveBuffer);
+        tipo = "A";
+    }
+    else if(tipo == 69){
+        sprintf(chaveStruct, "%s", c.email);
+        tipo = "E";
+    }
+    else if(tipo == 67){
+        sprintf(chaveStruct, "%s", c.cpf);
+        tipo = "C";
+    }
+    else{
+        printf(ERRO_TIPO_PIX_INVALIDO, tipo);
+        return;
+    }
+
+    strcpy(c.chaves_pix[i], tipo + chaveStruct);
+
+    c.chaves_pix[i][TAM_MAX_CHAVE_PIX-1] = '\0';
+
+    escrever_registro_cliente(c, rrn);
+
+    btree_insert(chaveStruct, &chaves_pix_idx);
+
+    printf(SUCESSO);
+
 }
 
 void transferir_menu(char *chave_pix_origem, char *chave_pix_destino, double valor) {
@@ -923,14 +983,14 @@ void transferir_menu(char *chave_pix_origem, char *chave_pix_destino, double val
 /* Busca */
 void buscar_cliente_cpf_menu(char *cpf) {
 
-    char chaveCliente[TAM_CHAVE_CLIENTES_IDX];
+    char chaveCliente[TAM_REGISTRO_CLIENTE];
 
-    bool found = bsearch(cpf, false, chaveCliente, clientes_idx.rrn_raiz, &clientes_idx);   
+    bool found = btree_search(chaveCliente, false, cpf, clientes_idx.rrn_raiz, &clientes_idx);   
 
     if(found){
 
         int rrn;
-        rrn = atoi(chaveCliente + 2);
+        rrn = atoi(chaveCliente + 1);
 
         exibir_cliente(rrn);
 
@@ -942,12 +1002,12 @@ void buscar_cliente_chave_pix_menu(char *chave_pix) {
 
     char chavePix[TAM_MAX_CHAVE_PIX];
 
-    bool found = bsearch(chave_pix, false, chavePix, chaves_pix_idx.rrn_raiz, &chaves_pix_idx);   
+    bool found = btree_search(chave_pix, false, chave_pix, chaves_pix_idx.rrn_raiz, &chaves_pix_idx);   
 
     if(found){
 
         int rrn;
-        rrn = atoi(chavePix + 2);
+        rrn = atoi(chavePix + 1);
 
         exibir_cliente(rrn);
 
@@ -959,15 +1019,16 @@ void buscar_cliente_chave_pix_menu(char *chave_pix) {
 void buscar_transacao_cpf_origem_timestamp_menu(char *cpf, char *timestamp) {
 
     char chaveTransacao[TAM_CHAVE_TIMESTAMP_CPF_ORIGEM_IDX];
+    char transacao[TAM_REGISTRO_TRANSACAO];
 
     sprintf(chaveTransacao, "%s%s", cpf, timestamp);
 
-    bool found = bsearch(chaveTransacao, false, chaveTransacao, timestamp_cpf_origem_idx.rrn_raiz, &timestamp_cpf_origem_idx);   
+    bool found = btree_search(transacao, false, chaveTransacao, timestamp_cpf_origem_idx.rrn_raiz, &timestamp_cpf_origem_idx);   
 
     if(found){
 
         int rrn;
-        rrn = atoi(chaveTransacao + 2);
+        rrn = atoi(chaveTransacao + 1);
 
         exibir_transacao(rrn);
 
